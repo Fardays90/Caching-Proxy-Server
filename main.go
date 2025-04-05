@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"proxy-cache/cache"
 	"strings"
+	// "bytes"
 )
 
 var Port string
@@ -17,6 +20,21 @@ func handleClient(w http.ResponseWriter, r *http.Request) {
 	URL := Origin + Path
 	req, err := http.NewRequest(r.Method, URL, r.Body)
 	fmt.Println("Forwarding the request to -> " + URL)
+	cachedResp, cachedHeader, found := cache.Get(URL)
+	if found {
+		for k, v := range cachedHeader {
+			for _, vv := range v {
+				w.Header().Set(k, vv)
+			}
+		}
+		responseJson, err := json.Marshal(cachedResp)
+		if err != nil {
+			fmt.Println("Error trying to make json")
+			return
+		}
+		w.Write(responseJson)
+		return
+	}
 	if err != nil {
 		fmt.Println("Error trying to create the request " + err.Error())
 		return
@@ -34,8 +52,15 @@ func handleClient(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add(k, vv)
 		}
 	}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error trying to read body")
+		return
+	}
+	fmt.Println("Cache miss")
+	cache.Set(URL, bodyBytes, resp.Header)
 	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
+	w.Write(bodyBytes)
 }
 
 func main() {
