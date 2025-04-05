@@ -1,13 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"proxy-cache/cache"
 	"strings"
-	// "bytes"
 )
 
 var Port string
@@ -27,12 +25,7 @@ func handleClient(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set(k, vv)
 			}
 		}
-		responseJson, err := json.Marshal(cachedResp)
-		if err != nil {
-			fmt.Println("Error trying to make json")
-			return
-		}
-		w.Write(responseJson)
+		w.Write(cachedResp)
 		return
 	}
 	if err != nil {
