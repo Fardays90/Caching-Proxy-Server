@@ -4,4 +4,4 @@ Nice little proxy server that caches responses in a map, Fun project to teach me
 
 To run the proxy, enter the following command:
 ```bash
-caching-proxy --port <port> --origin https://your-origin.com
+caching-proxy --port <port> --origin https://your-origin.com/
